@@ -1,225 +1,287 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>233乐园社区</title>
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
-    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-    <style>
-        .container {
-            padding: 10px;
-            background: #f5f5f5;
-        }
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+		<title>233乐园社区</title>
+		<script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+		<style>
+			.container {
+				padding: 10px;
+				background: #f5f5f5;
+			}
 
-        .waterfall {
-            column-count: 2;
-            column-gap: 10px;
-        }
+			.waterfall {
+				column-count: 2;
+				column-gap: 10px;
+			}
 
-        .post-item {
-            break-inside: avoid;
-            background: white;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
+			.post-item {
+				break-inside: avoid;
+				background: white;
+				border-radius: 8px;
+				margin-bottom: 10px;
+				box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+			}
 
-        .post-media {
-            width: 100%;
-            border-radius: 6px;
-        }
+			.post-media {
+				width: 100%;
+				border-radius: 6px;
+			}
 
-        .post-content {
-            padding: 10px;
-            font-size: 14px;
-            color: #333;
-        }
+			.post-content {
+				padding: 10px;
+				font-size: 14px;
+				color: #333;
+			}
 
-        .loading {
-            text-align: center;
-            padding: 15px;
-            color: #999;
-        }
+			.loading {
+				text-align: center;
+				padding: 15px;
+				color: #999;
+			}
 
-        .refresh-text {
-            position: fixed;
-            top: 50px;
-            width: 100%;
-            text-align: center;
-            color: #666;
-        }
-    </style>
-</head>
-<body>
-    <div id="app">
-        <div class="refresh-text" v-show="refreshing">正在刷新...</div>
-        <div class="container">
-            <div class="waterfall">
-                <div class="post-item" v-for="(item, index) in postList" :key="item.id">
-                    <video 
-                        v-if="item.type === 'video'"
-                        :poster="item.cover"
-                        class="post-media"
-                        controls
-                        playsinline
-                        webkit-playsinline
-                        :style="{ height: item.mediaHeight + 'px' }">
-                        <source :src="item.mediaUrl" type="video/mp4">
-                    </video>
-                    <img 
-                        v-else
-                        class="post-media"
-                        :src="item.mediaUrl"
-                        :style="{ height: item.mediaHeight + 'px' }">
-                    <div class="post-content">{{ item.title }}</div>
-                </div>
-            </div>
-            <div class="loading" v-show="loading">
-                {{ loadingText }}
-            </div>
-        </div>
-    </div>
+			.refresh-text {
+				position: fixed;
+				top: 50px;
+				width: 100%;
+				text-align: center;
+				color: #666;
+			}
+			
+			.user-recommendations {
+			  background-color: #f9f9f9;
+			  padding: 16px;
+			  border-radius: 8px;
+			}
+			
+			.user-item {
+			  display: flex;
+			  align-items: center;
+			}
+			
+			.avatar {
+			  width: 50px;
+			  height: 50px;
+			  border-radius: 50%;
+			}
+			.user-info {
+			  flex: 1;
+			}
+			
+			.addList {
+			  display: flex;
+			    flex-direction: column;
+			    align-items: center; /* 水平居中 */
+				margin-right: 10px;
+			}
+			.add-button {
+			  font-size: 20px;
+			  color: red;
+			  margin-top: -20px;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="app">
+			<div class="refresh-text" v-show="refreshing">正在刷新...</div>
+			<div class="container">
+				<div class="waterfall">
+					<div class="post-item" v-for="(item, index) in postList" :key="item.id">
+						<div v-if="index == 1">
+							<div class="user-recommendations">
+								<h3>优质用户推荐</h3>
+								<div class="user-item" v-for="user in recommendedUsers" :key="user.id">
+									<div class="addList">
+										<img :src="item.mediaUrl" alt="avatar" class="avatar"/>
+										<div class="add-button">+</div>
+									</div>
+									
+									<div class="user-info">
+										<p style="font-size: 15px;font-weight: 800;">{{ user.name }}</p>
+										<p style="font-size: 10px;">{{ user.description }}</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div v-else>
+							<video v-if="item.type === 'video'" :poster="item.cover" class="post-media" controls
+								playsinline webkit-playsinline :style="{ height: item.mediaHeight + 'px' }">
+								<source src="https://vd3.bdstatic.com/mda-rd9bzr1sc26by9zg/cae_h264/1744275435129312369/mda-rd9bzr1sc26by9zg.mp4?abtest=peav_l52&appver=&auth_key=1745579209-0-0-391607e7e35235d4854ef0b48f29f8b4&bcevod_channel=searchbox_feed&cd=0&cr=0&did=cfcd208495d565ef66e7dff9f98764da&logid=2209403981&model=&osver=&pd=1&pt=4&sl=757&sle=1&split=766284&vid=11695342049971600157&vt=1" type="video/mp4">
+							</video>
+							<img v-else class="post-media" :src="item.mediaUrl"
+								:style="{ height: item.mediaHeight + 'px' }">
+							<div class="post-content">{{ item.title }}</div>
+						</div>
 
-<script>
-new Vue({
-    el: '#app',
-    data() {
-        return {
-            postList: [],
-            page: 1,
-            loading: false,
-            refreshing: false,
-            hasMore: true,
-            loadingText: '加载中...'
-        }
-    },
-    mounted() {
-        this.loadPosts();
-        this.initScrollListener();
-        this.initPullRefresh();
-    },
-    methods: {
-        // 初始化滚动监听
-        initScrollListener() {
-            window.addEventListener('scroll', this.handleScroll);
-        },
-        
-        // 处理滚动事件
-        handleScroll() {
-            const scrollTop = document.documentElement.scrollTop;
-            const clientHeight = document.documentElement.clientHeight;
-            const scrollHeight = document.documentElement.scrollHeight;
-            
-            if (scrollTop + clientHeight >= scrollHeight - 100 && !this.loading && this.hasMore) {
-                this.loadPosts();
-            }
-        },
+					</div>
+				</div>
+				<div class="loading" v-show="loading">
+					{{ loadingText }}
+				</div>
+			</div>
+		</div>
 
-        // 初始化下拉刷新
-        initPullRefresh() {
-            let startY = 0;
-            let currentY = 0;
-            
-            document.addEventListener('touchstart', e => {
-                startY = e.touches[0].pageY;
-            });
+		<script>
+			new Vue({
+				el: '#app',
+				data() {
+					return {
+						postList: [],
+						page: 1,
+						loading: false,
+						refreshing: false,
+						hasMore: true,
+						loadingText: '加载中...',
+						recommendedUsers: [{
+								id: 1,
+								name: '阿辞',
+								description: '不接无偿，只画自己喜欢的'
+							},
+							{
+								id: 2,
+								name: '青空千绪',
+								description: '关注我，随机抽人送礼！'
+							},
+							{
+								id: 3,
+								name: '大橘无情',
+								description: '摆烂选手元老评测，每天就是...' 
+							}
+						],
+					}
+				},
+				mounted() {
+					this.loadPosts();
+					this.initScrollListener();
+					this.initPullRefresh();
+					
+				},
+				methods: {
+					// 初始化滚动监听
+					initScrollListener() {
+						window.addEventListener('scroll', this.handleScroll);
+					},
 
-            document.addEventListener('touchmove', e => {
-                currentY = e.touches[0].pageY;
-                if (currentY - startY > 50 && !this.refreshing) {
-                    this.refreshPosts();
-                }
-            });
-        },
+					// 处理滚动事件
+					handleScroll() {
+						const scrollTop = document.documentElement.scrollTop;
+						const clientHeight = document.documentElement.clientHeight;
+						const scrollHeight = document.documentElement.scrollHeight;
 
-        // 加载帖子数据
-        async loadPosts() {
-            if (this.loading || !this.hasMore) return;
-            
-            this.loading = true;
-            try {
-                const params = {
-                    page: this.page,
-                    format: this.getUrlFormat()
-                };
+						if (scrollTop + clientHeight >= scrollHeight - 100 && !this.loading && this.hasMore) {
+							this.loadPosts();
+						}
+					},
 
-                // 模拟API请求
-                const response = await this.mockApi(params);
-                
-                this.postList = [...this.postList, ...response.data];
-                this.hasMore = response.hasMore;
-                this.page++;
-                
-                this.$nextTick(() => {
-                    this.calculateMediaHeight();
-                });
-            } finally {
-                this.loading = false;
-            }
-        },
+					// 初始化下拉刷新
+					initPullRefresh() {
+						let startY = 0;
+						let currentY = 0;
 
-        // 刷新帖子
-        async refreshPosts() {
-            this.refreshing = true;
-            try {
-                this.page = 1;
-                const response = await this.mockApi({ 
-                    page: 1,
-                    format: this.getUrlFormat()
-                });
-                
-                this.postList = response.data;
-                this.hasMore = response.hasMore;
-            } finally {
-                this.refreshing = false;
-            }
-        },
+						document.addEventListener('touchstart', e => {
+							startY = e.touches[0].pageY;
+						});
 
-        // 计算媒体高度
-        calculateMediaHeight() {
-            this.postList = this.postList.map(item => {
-                const baseHeight = 200;
-                const randomHeight = Math.floor(Math.random() * 100);
-                return {
-                    ...item,
-                    mediaHeight: baseHeight + randomHeight
-                }
-            });
-        },
+						document.addEventListener('touchmove', e => {
+							currentY = e.touches[0].pageY;
+							if (currentY - startY > 50 && !this.refreshing) {
+								this.refreshPosts();
+							}
+						});
+					},
 
-        // 获取URL格式参数
-        getUrlFormat() {
-            const params = new URLSearchParams(location.search);
-            return params.get('format') || 'v1';
-        },
+					// 加载帖子数据
+					async loadPosts() {
+						if (this.loading || !this.hasMore) return;
 
-        // 模拟API接口
-        mockApi(params) {
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    const mockData = Array.from({length: 10}, (_, i) => ({
-                        id: params.page * 10 + i,
-                        type: Math.random() > 0.5 ? 'image' : 'video',
-                        title: `用户动态#${params.page * 10 + i}`,
-                        mediaUrl: params.format === 'v1' 
-                            ? `https://picsum.photos/300/400?r=${Math.random()}`
-                            : `https://source.unsplash.com/random/300x400?s=${i}`,
-                        cover: `https://picsum.photos/300/400?r=${Math.random()}`,
-                    }));
-                    
-                    resolve({
-                        data: mockData,
-                        hasMore: params.page < 3
-                    });
-                }, 800);
-            });
-        }
-    },
-    beforeDestroy() {
-        window.removeEventListener('scroll', this.handleScroll);
-    }
-});
-</script>
-</body>
+						this.loading = true;
+						try {
+							const params = {
+								page: this.page,
+								format: this.getUrlFormat()
+							};
+
+							// 模拟API请求
+							const response = await this.mockApi(params);
+
+							this.postList = [...this.postList, ...response.data];
+							this.hasMore = response.hasMore;
+							this.page++;
+
+							this.$nextTick(() => {
+								this.calculateMediaHeight();
+							});
+						} finally {
+							this.loading = false;
+						}
+					},
+
+					// 刷新帖子
+					async refreshPosts() {
+						this.refreshing = true;
+						try {
+							this.page = 1;
+							const response = await this.mockApi({
+								page: 1,
+								format: this.getUrlFormat()
+							});
+
+							this.postList = response.data;
+							this.hasMore = response.hasMore;
+						} finally {
+							this.refreshing = false;
+						}
+					},
+
+					// 计算媒体高度
+					calculateMediaHeight() {
+						this.postList = this.postList.map(item => {
+							const baseHeight = 200;
+							const randomHeight = Math.floor(Math.random() * 100);
+							return {
+								...item,
+								mediaHeight: baseHeight + randomHeight
+							}
+						});
+					},
+
+					// 获取URL格式参数
+					getUrlFormat() {
+						const params = new URLSearchParams(location.search);
+						return params.get('format') || 'v1';
+					},
+
+					// 模拟API接口
+					mockApi(params) {
+						return new Promise(resolve => {
+							setTimeout(() => {
+								const mockData = Array.from({
+									length: 10
+								}, (_, i) => ({
+									id: params.page * 10 + i,
+									type: i != 3 ? 'image' : 'video',
+									title: `用户动态#${params.page * 10 + i}`,
+									mediaUrl: params.format === 'v1' ?
+										`https://picsum.photos/300/400?r=${Math.random()}` :
+										`https://source.unsplash.com/random/300x400?s=${i}`,
+									cover: `https://picsum.photos/300/400?r=${Math.random()}`,
+								}));
+
+								resolve({
+									data: mockData,
+									hasMore: params.page < 3
+								});
+							}, 800);
+						});
+					},
+				
+				},
+				beforeDestroy() {
+					window.removeEventListener('scroll', this.handleScroll);
+				}
+			});
+		</script>
+	</body>
 </html>
